@@ -43,16 +43,34 @@ export class CameraRotate {
     }, { passive: true });
   }
 
-  // Desktop: move mouse to left/right edge to smoothly rotate camera toward side walls.
+  // Desktop: hover the exact left/right screen edge to rotate toward a side wall.
+  // Leaving the edge snaps the camera back instantly (no spring delay).
   initMouseCorners(canvas) {
+    const EDGE_PX = 24;
+    let _inEdge = false;
+
+    const snapBack = () => {
+      this._dragYaw         = 0;
+      this._yawSpring.pos   = 0;
+      this._yawSpring.vel   = 0;
+      _inEdge = false;
+    };
+
     canvas.addEventListener('mousemove', (e) => {
       const x = e.clientX;
       const w = window.innerWidth;
-      const threshold = w * 0.18;
-      if      (x < threshold)     this._dragYaw =  Math.PI / 2;  // face left wall (SKILLS)
-      else if (x > w - threshold) this._dragYaw = -Math.PI / 2;  // face right wall (CONTACT)
-      else                        this._dragYaw =  0;             // face back wall (default)
+      if (x <= EDGE_PX) {
+        this._dragYaw = Math.PI / 2;   // face left wall (SKILLS)
+        _inEdge = true;
+      } else if (x >= w - EDGE_PX) {
+        this._dragYaw = -Math.PI / 2;  // face right wall (CONTACT)
+        _inEdge = true;
+      } else if (_inEdge) {
+        snapBack();
+      }
     });
+
+    canvas.addEventListener('mouseleave', snapBack);
   }
 
   // gyroTiltX = beta delta (forward/back tilt), gyroTiltY = gamma delta (left/right roll)
