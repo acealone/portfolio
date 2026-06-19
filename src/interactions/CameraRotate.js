@@ -1,8 +1,7 @@
 import * as THREE from 'three';
 import { makeSpring, stepSpring } from './SpringPhysics.js';
 
-const MAX_YAW   =  0.55; // ±radians
-const MAX_PITCH =  0.25;
+const MAX_PITCH = 0.45; // ±radians — prevent flipping past zenith/nadir
 
 export class CameraRotate {
   constructor() {
@@ -18,8 +17,6 @@ export class CameraRotate {
     this._lastY      = 0;
   }
 
-  // Call once on mobile to enable touch-drag camera rotation.
-  // Shares the canvas with Raycaster; drag threshold keeps tap detection intact.
   initTouchDrag(canvas) {
     canvas.addEventListener('touchstart', (e) => {
       if (e.touches.length !== 1) return;
@@ -38,17 +35,22 @@ export class CameraRotate {
       if (!this._isDrag && Math.abs(dx) + Math.abs(dy) < 10) return;
       this._isDrag = true;
 
-      this._dragYaw   += -dx / window.innerWidth  * 1.2;
-      this._dragPitch += -dy / window.innerHeight * 0.8;
-      this._dragYaw   = Math.max(-MAX_YAW,   Math.min(MAX_YAW,   this._dragYaw));
-      this._dragPitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, this._dragPitch));
+      // Positive dx (drag right) → positive yaw → camera looks left (drag-world feel)
+      // Positive dy (drag down)  → positive pitch → camera looks down
+      this._dragYaw   +=  dx / window.innerWidth  * 2.5; // unclamped for 360° rotation
+      this._dragPitch +=  dy / window.innerHeight * 1.5;
+      this._dragPitch  = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, this._dragPitch));
     }, { passive: true });
   }
 
-  // gyroTiltX/Y are already normalized -1..1 (from Gyroscope.tiltX/Y)
+  // gyroTiltX = beta delta (forward/back tilt), gyroTiltY = gamma delta (left/right roll)
   update(dt, gyroTiltX = 0, gyroTiltY = 0) {
-    const targetYaw   = Math.max(-MAX_YAW,   Math.min(MAX_YAW,   this._dragYaw   + gyroTiltY *  0.22));
-    const targetPitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, this._dragPitch + gyroTiltX * -0.12));
+    // gyroTiltY (roll left/right) → yaw: roll right → look right (positive)
+    // gyroTiltX (pitch forward/back) → pitch: tilt forward → look down (positive)
+    const targetYaw   = this._dragYaw   + gyroTiltY * 0.22;
+    const targetPitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH,
+      this._dragPitch + gyroTiltX * 0.12
+    ));
 
     stepSpring(this._yawSpring,   targetYaw,   dt, 80, 14);
     stepSpring(this._pitchSpring, targetPitch, dt, 80, 14);
@@ -57,13 +59,14 @@ export class CameraRotate {
     this.pitchOffset = this._pitchSpring.pos;
   }
 
-  // Rotate camera's look direction by accumulated offsets. Position stays at homePos.
+  // Rotate camera's look direction by yaw/pitch offsets. Position stays at homePos.
   applyToCamera(camera, homePos, homeLookAt) {
     const forward = new THREE.Vector3().subVectors(homeLookAt, homePos).normalize();
-    const right   = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+    const worldUp = new THREE.Vector3(0, 1, 0);
+    const right   = new THREE.Vector3().crossVectors(forward, worldUp).normalize();
 
-    const yawQuat   = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), this.yawOffset);
-    const pitchQuat = new THREE.Quaternion().setFromAxisAngle(right, this.pitchOffset);
+    const yawQuat   = new THREE.Quaternion().setFromAxisAngle(worldUp, this.yawOffset);
+    const pitchQuat = new THREE.Quaternion().setFromAxisAngle(right,   this.pitchOffset);
 
     const rotated = forward.clone().applyQuaternion(yawQuat).applyQuaternion(pitchQuat);
 
