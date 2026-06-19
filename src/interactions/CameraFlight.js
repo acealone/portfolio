@@ -88,7 +88,7 @@ export class CameraFlight {
       // Fly back: lerp look from frame → home over first 75%
       const lookPct    = easeInOutCubic(Math.min(this.progress / 0.75, 1));
       const lookTarget = new THREE.Vector3().lerpVectors(
-        this.frameLookTarget, this.homeLookAt, lookPct
+        this.frameLookTarget, this.startLookAt, lookPct
       );
       this.camera.lookAt(lookTarget);
 

@@ -34,13 +34,13 @@ const FRAME_CONFIGS = [
 // Camera config per layout — frame positions are fixed regardless of layout
 const LAYOUTS = {
   wide: {
-    cameraPos:    new THREE.Vector3(0, 1.6, 3.0),
-    cameraLookAt: new THREE.Vector3(0, 2.0, -4.5),
+    cameraPos:    new THREE.Vector3(0, 1.6, 0),
+    cameraLookAt: new THREE.Vector3(0, 2.0, -5),
     fov: 60,
   },
   narrow: {
-    cameraPos:    new THREE.Vector3(0, 1.6, 3.0),
-    cameraLookAt: new THREE.Vector3(0, 2.0, -4.5),
+    cameraPos:    new THREE.Vector3(0, 1.6, 0),
+    cameraLookAt: new THREE.Vector3(0, 2.0, -5),
     fov: 72,
   },
 };
