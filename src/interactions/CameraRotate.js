@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { makeSpring, stepSpring } from './SpringPhysics.js';
 
-const MAX_PITCH = 0.45; // ±radians — prevent flipping past zenith/nadir
+const MAX_PITCH = 0.75; // ±radians — prevent flipping past zenith/nadir
 
 export class CameraRotate {
   constructor() {
@@ -63,12 +63,15 @@ export class CameraRotate {
   applyToCamera(camera, homePos, homeLookAt) {
     const forward = new THREE.Vector3().subVectors(homeLookAt, homePos).normalize();
     const worldUp = new THREE.Vector3(0, 1, 0);
-    const right   = new THREE.Vector3().crossVectors(forward, worldUp).normalize();
 
-    const yawQuat   = new THREE.Quaternion().setFromAxisAngle(worldUp, this.yawOffset);
-    const pitchQuat = new THREE.Quaternion().setFromAxisAngle(right,   this.pitchOffset);
+    // Apply yaw first, then derive the right axis from the yawed forward so that
+    // pitch is always screen-up/down regardless of how far the user has rotated.
+    const yawQuat     = new THREE.Quaternion().setFromAxisAngle(worldUp, this.yawOffset);
+    const yawedFwd    = forward.clone().applyQuaternion(yawQuat);
+    const right       = new THREE.Vector3().crossVectors(yawedFwd, worldUp).normalize();
+    const pitchQuat   = new THREE.Quaternion().setFromAxisAngle(right, this.pitchOffset);
 
-    const rotated = forward.clone().applyQuaternion(yawQuat).applyQuaternion(pitchQuat);
+    const rotated = yawedFwd.clone().applyQuaternion(pitchQuat);
 
     camera.position.copy(homePos);
     camera.lookAt(homePos.clone().add(rotated));
