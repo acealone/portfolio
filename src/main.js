@@ -110,6 +110,10 @@ if (isMobile) {
   }
 }
 
+if (!isMobile) {
+  camRotate.initMouseCorners(renderer.domElement);
+}
+
 // ─── Sub-pages ──────────────────────────────────────────────────────────────
 
 const subpages = new SubpageManager();

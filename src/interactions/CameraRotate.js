@@ -43,6 +43,18 @@ export class CameraRotate {
     }, { passive: true });
   }
 
+  // Desktop: move mouse to left/right edge to smoothly rotate camera toward side walls.
+  initMouseCorners(canvas) {
+    canvas.addEventListener('mousemove', (e) => {
+      const x = e.clientX;
+      const w = window.innerWidth;
+      const threshold = w * 0.18;
+      if      (x < threshold)     this._dragYaw =  Math.PI / 2;  // face left wall (SKILLS)
+      else if (x > w - threshold) this._dragYaw = -Math.PI / 2;  // face right wall (CONTACT)
+      else                        this._dragYaw =  0;             // face back wall (default)
+    });
+  }
+
   // gyroTiltX = beta delta (forward/back tilt), gyroTiltY = gamma delta (left/right roll)
   // Gyro drives rotation velocity (tilt = speed), enabling full 360° just like drag.
   update(dt, gyroTiltX = 0, gyroTiltY = 0) {

@@ -88,13 +88,7 @@ export class Gallery {
     const hit = castRay(camera, this.pictureMeshes);
     const newHovered = hit ? hit.object.userData.frameRef : null;
 
-    if (this.hoveredFrame && this.hoveredFrame !== newHovered) {
-      this.hoveredFrame.clearHover();
-    }
-
     if (newHovered) {
-      const localHit = newHovered.group.worldToLocal(hit.point.clone());
-      newHovered.setHoverTarget(localHit.x, localHit.y);
       canvas.classList.add('hovering');
     } else {
       canvas.classList.remove('hovering');
