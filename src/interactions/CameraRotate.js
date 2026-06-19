@@ -49,7 +49,7 @@ export class CameraRotate {
     // gyroTiltX (pitch forward/back) → pitch: tilt forward → look down (positive)
     const targetYaw   = this._dragYaw   + gyroTiltY * 0.22;
     const targetPitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH,
-      this._dragPitch + gyroTiltX * 0.12
+      this._dragPitch - gyroTiltX * 0.12
     ));
 
     stepSpring(this._yawSpring,   targetYaw,   dt, 80, 14);
