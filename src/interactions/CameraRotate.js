@@ -43,34 +43,33 @@ export class CameraRotate {
     }, { passive: true });
   }
 
-  // Desktop: hover the exact left/right screen edge to rotate toward a side wall.
-  // Leaving the edge snaps the camera back instantly (no spring delay).
+  // Desktop: touch the exact left/right screen edge to rotate 90° toward that wall.
+  // Rotation persists after leaving — re-enter the edge to rotate another 90°.
   initMouseCorners(canvas) {
     const EDGE_PX = 24;
-    let _inEdge = false;
-
-    const snapBack = () => {
-      this._dragYaw         = 0;
-      this._yawSpring.pos   = 0;
-      this._yawSpring.vel   = 0;
-      _inEdge = false;
-    };
+    let _edgeSide = null; // 'left' | 'right' | null
 
     canvas.addEventListener('mousemove', (e) => {
       const x = e.clientX;
       const w = window.innerWidth;
+
       if (x <= EDGE_PX) {
-        this._dragYaw = Math.PI / 2;   // face left wall (SKILLS)
-        _inEdge = true;
+        if (_edgeSide !== 'left') {
+          this._dragYaw += Math.PI / 2; // each entry adds 90° toward left
+          _edgeSide = 'left';
+        }
       } else if (x >= w - EDGE_PX) {
-        this._dragYaw = -Math.PI / 2;  // face right wall (CONTACT)
-        _inEdge = true;
-      } else if (_inEdge) {
-        snapBack();
+        if (_edgeSide !== 'right') {
+          this._dragYaw -= Math.PI / 2; // each entry adds 90° toward right
+          _edgeSide = 'right';
+        }
+      } else {
+        _edgeSide = null; // reset so re-entering the edge triggers again
       }
     });
 
-    canvas.addEventListener('mouseleave', snapBack);
+    // Leaving the window resets edge state but keeps yaw
+    canvas.addEventListener('mouseleave', () => { _edgeSide = null; });
   }
 
   // gyroTiltX = beta delta (forward/back tilt), gyroTiltY = gamma delta (left/right roll)
