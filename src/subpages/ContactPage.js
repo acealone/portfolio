@@ -1,13 +1,15 @@
+import { ICON } from '../utils/Icons.js';
+
 export function initContactPage(panel, onBack) {
   panel.innerHTML = `
     <div class="panel-inner">
       <div class="panel-header">
-        <button class="pixel-btn back-btn" aria-label="Go back">&#9664; BACK</button>
+        <button class="pixel-btn back-btn" aria-label="Go back">${ICON.ARROW_LEFT} BACK</button>
         <h1 class="panel-title">CONTACT</h1>
       </div>
 
       <p class="pixel-text">
-        Got a project in mind? Want to collaborate? Send a message — I read everything.
+        Got a project in mind? Want to collaborate? Send a message &mdash; I read everything.
       </p>
 
       <hr class="pixel-divider" />
@@ -48,24 +50,23 @@ export function initContactPage(panel, onBack) {
           ></textarea>
         </div>
         <div>
-          <button type="submit" class="pixel-btn">SEND MESSAGE &#9654;</button>
+          <button type="submit" class="pixel-btn">SEND MESSAGE ${ICON.ARROW_RIGHT}</button>
         </div>
         <p class="pixel-text" id="form-status" style="display:none; color: #44ff88;"></p>
       </form>
 
       <hr class="pixel-divider" />
 
-      <h2 class="section-title">&#9670; DIRECT LINKS</h2>
+      <h2 class="section-title">${ICON.DIAMOND} DIRECT LINKS</h2>
       <div class="social-row">
-        <a href="mailto:contact@example.com" class="pixel-btn">&#128140; EMAIL</a>
-        <a href="https://github.com/acealone" target="_blank" rel="noopener" class="pixel-btn">&#128025; GITHUB</a>
+        <a href="mailto:contact@example.com" class="pixel-btn">${ICON.ENVELOPE} EMAIL</a>
+        <a href="https://github.com/acealone" target="_blank" rel="noopener" class="pixel-btn">${ICON.GITHUB} GITHUB</a>
       </div>
     </div>
   `;
 
   panel.querySelector('.back-btn').addEventListener('click', onBack);
 
-  // Simple mailto fallback — no server needed for static site
   panel.querySelector('#contact-form').addEventListener('submit', (e) => {
     e.preventDefault();
     const name    = panel.querySelector('#contact-name').value;

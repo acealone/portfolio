@@ -1,7 +1,9 @@
+import { ICON } from '../utils/Icons.js';
+
 const SKILLS = {
   'FRONTEND': [
     { name: 'JavaScript / ES2024', pct: 92 },
-    { name: 'HTML & CSS',          pct: 88 },
+    { name: 'HTML &amp; CSS',      pct: 88 },
     { name: 'React / Svelte',      pct: 75 },
     { name: 'Three.js / WebGL',    pct: 80 },
   ],
@@ -18,9 +20,6 @@ const SKILLS = {
 };
 
 function skillBar(skill) {
-  const filled = Math.round(skill.pct / 10);
-  const empty  = 10 - filled;
-  const blocks = '█'.repeat(filled) + '░'.repeat(empty);
   return `
     <div class="skill-row">
       <span class="skill-label">${skill.name}</span>
@@ -35,7 +34,7 @@ function skillBar(skill) {
 export function initSkillsPage(panel, onBack) {
   const categories = Object.entries(SKILLS).map(([cat, skills]) => `
     <div class="skill-category">
-      <h2 class="section-title">&#9670; ${cat}</h2>
+      <h2 class="section-title">${ICON.DIAMOND} ${cat}</h2>
       ${skills.map(skillBar).join('')}
     </div>
   `).join('');
@@ -43,7 +42,7 @@ export function initSkillsPage(panel, onBack) {
   panel.innerHTML = `
     <div class="panel-inner">
       <div class="panel-header">
-        <button class="pixel-btn back-btn" aria-label="Go back">&#9664; BACK</button>
+        <button class="pixel-btn back-btn" aria-label="Go back">${ICON.ARROW_LEFT} BACK</button>
         <h1 class="panel-title">SKILLS</h1>
       </div>
 
