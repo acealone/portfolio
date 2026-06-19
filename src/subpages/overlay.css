@@ -337,6 +337,14 @@
   color: #444466;
 }
 
+/* ─── Prevent iOS zoom on input focus ─── */
+@media (hover: none) {
+  .pixel-input,
+  .pixel-textarea {
+    font-size: 16px;
+  }
+}
+
 /* ─── Divider ─── */
 .pixel-divider {
   border: none;
