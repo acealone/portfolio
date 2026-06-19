@@ -38,7 +38,7 @@ export class CameraRotate {
       // Positive dx (drag right) → positive yaw → camera looks left (drag-world feel)
       // Positive dy (drag down)  → positive pitch → camera looks down
       this._dragYaw   +=  dx / window.innerWidth  * 0.8; // unclamped for 360° rotation
-      this._dragPitch -=  dy / window.innerHeight * 0.5;
+      this._dragPitch +=  dy / window.innerHeight * 0.5;
       this._dragPitch  = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, this._dragPitch));
     }, { passive: true });
   }
