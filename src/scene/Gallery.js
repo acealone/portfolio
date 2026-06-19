@@ -50,8 +50,6 @@ export class Gallery {
     this.frames        = [];
     this.pictureMeshes = [];
     this.hoveredFrame  = null;
-    this._gyroX        = 0;
-    this._gyroY        = 0;
 
     const group = new THREE.Group();
     scene.add(group);
@@ -77,13 +75,6 @@ export class Gallery {
       }
     });
     return layout;
-  }
-
-  // Drive all frames with gyro tilt simultaneously (uniform wall-wobble feel)
-  setGyroTilt(gyroX, gyroY) {
-    this._gyroX = gyroX;
-    this._gyroY = gyroY;
-    this.frames.forEach(f => f.setGyroTilt(gyroX, gyroY));
   }
 
   update(dt, camera, canvas) {
