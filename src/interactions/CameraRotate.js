@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { makeSpring, stepSpring } from './SpringPhysics.js';
 
-const MAX_PITCH = 0.75; // ±radians — prevent flipping past zenith/nadir
+const MAX_PITCH = 1.45; // ±radians — allow near-ceiling/floor views (well below π/2 singularity)
 
 export class CameraRotate {
   constructor() {
@@ -37,7 +37,7 @@ export class CameraRotate {
 
       // Positive dx (drag right) → positive yaw → camera looks left (drag-world feel)
       // Positive dy (drag down)  → positive pitch → camera looks down
-      this._dragYaw   +=  dx / window.innerWidth  * 0.8; // unclamped for 360° rotation
+      this._dragYaw   +=  dx / window.innerWidth  * 2.5; // unclamped for 360° rotation
       this._dragPitch +=  dy / window.innerHeight * 0.5;
       this._dragPitch  = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, this._dragPitch));
     }, { passive: true });
@@ -49,7 +49,7 @@ export class CameraRotate {
     // gyroTiltX (pitch forward/back) → pitch: tilt forward → look down (positive)
     const targetYaw   = this._dragYaw   + gyroTiltY * 0.22;
     const targetPitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH,
-      this._dragPitch - gyroTiltX * 0.12
+      this._dragPitch + gyroTiltX * 0.12
     ));
 
     stepSpring(this._yawSpring,   targetYaw,   dt, 80, 14);
