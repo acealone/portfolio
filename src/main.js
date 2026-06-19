@@ -5,7 +5,6 @@ import { Gallery, getLayoutName, getLayoutConfig } from './scene/Gallery.js';
 import { initRaycaster }                          from './interactions/Raycaster.js';
 import { CameraFlight }                           from './interactions/CameraFlight.js';
 import { CameraRotate }                           from './interactions/CameraRotate.js';
-import { Gyroscope }                              from './interactions/Gyroscope.js';
 import { SubpageManager }                         from './subpages/SubpageManager.js';
 import { initAboutPage }                          from './subpages/AboutPage.js';
 import { initProjectsPage }                       from './subpages/ProjectsPage.js';
@@ -69,48 +68,14 @@ const initCfg = getLayoutConfig(currentLayout);
 const flight  = new CameraFlight(camera, fadeOverlay);
 flight.setHome(initCfg.cameraPos, initCfg.cameraLookAt);
 
-// ─── Camera rotation (gyro + touch drag) ────────────────────────────────────
+// ─── Camera rotation (touch drag + desktop edge) ─────────────────────────────
 
 const camRotate = new CameraRotate();
-const gyro      = new Gyroscope();
-
-const gyroBtn  = document.getElementById('gyro-btn');
-const isMobile = ('ontouchstart' in window) || /Mobi|Android/i.test(navigator.userAgent);
-
-const gyroLabel = document.getElementById('gyro-label');
-
-const updateGyroBtn = (active) => {
-  gyroBtn.style.display = 'flex';
-  gyroLabel.textContent = active ? 'GYRO OFF' : 'GYRO';
-  gyroBtn.setAttribute('aria-label', active ? 'Disable gyroscope controls' : 'Enable gyroscope controls');
-};
+const isMobile  = ('ontouchstart' in window) || /Mobi|Android/i.test(navigator.userAgent);
 
 if (isMobile) {
   camRotate.initTouchDrag(renderer.domElement);
-
-  gyroBtn.addEventListener('click', async () => {
-    if (gyro.active) {
-      gyro.disable();
-      updateGyroBtn(false);
-    } else {
-      const ok = await gyro.enable();
-      if (ok) updateGyroBtn(true);
-    }
-  });
-
-  if (
-    typeof DeviceOrientationEvent !== 'undefined' &&
-    typeof DeviceOrientationEvent.requestPermission === 'function'
-  ) {
-    // iOS 13+: show enable button first; toggles to OFF after permission granted
-    updateGyroBtn(false);
-  } else {
-    // Android / non-gated: auto-enable and show disable button
-    gyro.enable().then(() => updateGyroBtn(true));
-  }
-}
-
-if (!isMobile) {
+} else {
   camRotate.initMouseCorners(renderer.domElement);
 }
 
@@ -197,7 +162,7 @@ function animate() {
   // Rotate camera from gyro + drag when idle (not in a flight or panel)
   if (!flight.active && !subpages.isOpen()) {
     const cfg = getLayoutConfig(currentLayout);
-    camRotate.update(dt, gyro.active ? gyro.tiltX : 0, gyro.active ? gyro.tiltY : 0);
+    camRotate.update(dt);
     camRotate.applyToCamera(camera, cfg.cameraPos, cfg.cameraLookAt);
   }
 

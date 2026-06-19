@@ -72,12 +72,8 @@ export class CameraRotate {
     canvas.addEventListener('mouseleave', () => { _edgeSide = null; });
   }
 
-  // gyroTiltX = beta delta (forward/back tilt), gyroTiltY = gamma delta (left/right roll)
-  // Gyro drives rotation velocity (tilt = speed), enabling full 360° just like drag.
-  update(dt, gyroTiltX = 0, gyroTiltY = 0) {
-    this._dragYaw   += gyroTiltY * 1.5 * dt;
-    this._dragPitch += gyroTiltX * 1.0 * dt;
-    this._dragPitch  = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, this._dragPitch));
+  update(dt) {
+    this._dragPitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, this._dragPitch));
 
     stepSpring(this._yawSpring,   this._dragYaw,   dt, 80, 14);
     stepSpring(this._pitchSpring, this._dragPitch, dt, 80, 14);
