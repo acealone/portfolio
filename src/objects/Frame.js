@@ -9,26 +9,35 @@ const PIC_DEPTH = 0.005;
 
 const SPRING_STIFFNESS = 120;
 const SPRING_DAMPING   = 18;
-const HOVER_IN_TIME    = 0.35; // seconds to ramp wobble strength to 1
-const HOVER_OUT_TIME   = 0.25; // seconds to ramp wobble strength back to 0
+const HOVER_IN_TIME    = 0.35;
+const HOVER_OUT_TIME   = 0.25;
 
 export class Frame {
-  constructor({ id, sectionId, label, position, size, baseRotZ = 0 }) {
+  constructor({ id, sectionId, label, position, size, baseRotZ = 0, baseRotY = 0 }) {
     this.id        = id;
     this.sectionId = sectionId;
     this.label     = label;
     this.size      = size;
 
+    this._baseRotZ = baseRotZ;
+    this._baseRotY = baseRotY;
+
+    // Direction the frame faces in world space (local +Z rotated by baseRotY).
+    // Used by CameraFlight to compute the approach position.
+    this.faceDir = new THREE.Vector3(0, 0, 1)
+      .applyEuler(new THREE.Euler(0, baseRotY, 0));
+
     this.group = new THREE.Group();
     this.group.position.copy(position);
     this.group.rotation.z = baseRotZ;
+    this.group.rotation.y = baseRotY; // set here too so first frame is correct
 
     this.springX = makeSpring();
     this.springY = makeSpring();
     this.targetX = 0;
     this.targetY = 0;
     this.isHovered = false;
-    this._hoverStrength = 0; // 0–1 ramp so entry is smooth
+    this._hoverStrength = 0;
 
     this._posTarget   = position.clone();
     this._scaleTarget = 1.0;
@@ -138,21 +147,19 @@ export class Frame {
   }
 
   update(dt) {
-    // Ramp hover strength for smooth wobble entry/exit
     if (this.isHovered) {
       this._hoverStrength = Math.min(1, this._hoverStrength + dt / HOVER_IN_TIME);
     } else {
       this._hoverStrength = Math.max(0, this._hoverStrength - dt / HOVER_OUT_TIME);
     }
 
-    // Scale hover targets by ramp so the first frames of hover ease in
     const sx = this.targetX * this._hoverStrength;
     const sy = this.targetY * this._hoverStrength;
     stepSpring(this.springX, sx, dt, SPRING_STIFFNESS, SPRING_DAMPING);
     stepSpring(this.springY, sy, dt, SPRING_STIFFNESS, SPRING_DAMPING);
 
     this.group.rotation.x = this.springX.pos;
-    this.group.rotation.y = this.springY.pos;
+    this.group.rotation.y = this._baseRotY + this.springY.pos; // spring wobble on top of wall orientation
 
     const lf = Math.min(dt * 6, 1);
     this.group.position.lerp(this._posTarget, lf);

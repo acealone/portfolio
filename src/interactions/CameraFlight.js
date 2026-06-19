@@ -18,7 +18,7 @@ export class CameraFlight {
     this.startLookAt = new THREE.Vector3(); // captured at flyTo start
 
     this.homePos    = camera.position.clone();
-    this.homeLookAt = new THREE.Vector3(0, 2.2, -4);
+    this.homeLookAt = new THREE.Vector3(0, 2.0, -4.5);
 
     this.frameLookTarget = new THREE.Vector3();
 
@@ -38,12 +38,18 @@ export class CameraFlight {
     this._onComplete = onComplete;
 
     this.startPos.copy(this.camera.position);
-    this.startLookAt.copy(this.homeLookAt); // ease FROM home look direction
+
+    // Start look direction from the camera's actual current orientation
+    // (accounts for drag/gyro rotation, not just the default home look)
+    const fwd = new THREE.Vector3();
+    this.camera.getWorldDirection(fwd);
+    this.startLookAt.copy(this.camera.position).addScaledVector(fwd, 8);
 
     frame.group.getWorldPosition(this.frameLookTarget);
 
-    this.endPos.copy(this.frameLookTarget);
-    this.endPos.z += 0.3;
+    // Approach from the direction the frame faces (works for side-wall frames too)
+    const faceDir = frame.faceDir || new THREE.Vector3(0, 0, 1);
+    this.endPos.copy(this.frameLookTarget).addScaledVector(faceDir, 0.3);
   }
 
   flyBack(onComplete) {

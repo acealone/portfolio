@@ -54,7 +54,6 @@ setupLighting(scene);
 // ─── Gallery ────────────────────────────────────────────────────────────────
 
 const gallery = new Gallery(scene);
-gallery.setLayout(currentLayout, true);
 
 // ─── Raycaster ──────────────────────────────────────────────────────────────
 
@@ -158,8 +157,6 @@ window.addEventListener('resize', () => {
   const newLayout = getLayoutName(window.innerWidth);
   if (newLayout !== currentLayout) {
     currentLayout = newLayout;
-    gallery.setLayout(newLayout);
-
     const cfg = getLayoutConfig(newLayout);
     flight.setHome(cfg.cameraPos, cfg.cameraLookAt);
 

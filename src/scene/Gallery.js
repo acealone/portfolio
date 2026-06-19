@@ -4,29 +4,44 @@ import { castRay } from '../interactions/Raycaster.js';
 
 const BASE_SIZE = { width: 1.3, height: 1.7 };
 
+// Fixed frame positions — one per wall section.
+// baseRotY = 0        → faces +Z (back wall)
+// baseRotY = +PI/2    → faces +X (left wall, x = -5)
+// baseRotY = -PI/2    → faces -X (right wall, x = +5)
+const FRAME_CONFIGS = [
+  {
+    id: 'about',    sectionId: 'about',    label: 'ABOUT',
+    pos: new THREE.Vector3(-2.0, 2.5, -4.93),
+    scale: 1.00, baseRotY: 0,              baseRotZ: -0.025,
+  },
+  {
+    id: 'projects', sectionId: 'projects', label: 'PROJECTS',
+    pos: new THREE.Vector3( 2.2, 2.2, -4.93),
+    scale: 0.95, baseRotY: 0,              baseRotZ:  0.020,
+  },
+  {
+    id: 'skills',   sectionId: 'skills',   label: 'SKILLS',
+    pos: new THREE.Vector3(-4.93, 2.45, -1.0),
+    scale: 1.00, baseRotY:  Math.PI / 2,  baseRotZ:  0.015,
+  },
+  {
+    id: 'contact',  sectionId: 'contact',  label: 'CONTACT',
+    pos: new THREE.Vector3( 4.93, 2.3,  1.0),
+    scale: 0.98, baseRotY: -Math.PI / 2,  baseRotZ: -0.018,
+  },
+];
+
+// Camera config per layout — frame positions are fixed regardless of layout
 const LAYOUTS = {
   wide: {
-    cameraPos:    new THREE.Vector3(0, 1.6, 4.5),
-    cameraLookAt: new THREE.Vector3(0, 2.2, -4),
+    cameraPos:    new THREE.Vector3(0, 1.6, 3.0),
+    cameraLookAt: new THREE.Vector3(0, 2.0, -4.5),
     fov: 60,
-    frames: [
-      // Hand-crafted variation: different heights, scales, and slight tilts
-      { pos: new THREE.Vector3(-3.6, 2.55, -3.93), scale: 1.05, baseRotZ: -0.035 },
-      { pos: new THREE.Vector3(-1.2, 2.10, -3.93), scale: 0.93, baseRotZ:  0.022 },
-      { pos: new THREE.Vector3( 1.2, 2.45, -3.93), scale: 1.02, baseRotZ: -0.018 },
-      { pos: new THREE.Vector3( 3.6, 2.15, -3.93), scale: 1.08, baseRotZ:  0.030 },
-    ],
   },
   narrow: {
-    cameraPos:    new THREE.Vector3(0, 2.3, 3.5),
-    cameraLookAt: new THREE.Vector3(0, 2.3, -4),
-    fov: 65,
-    frames: [
-      { pos: new THREE.Vector3(-0.9, 3.12, -3.93), scale: 0.78, baseRotZ: -0.025 },
-      { pos: new THREE.Vector3( 0.9, 3.05, -3.93), scale: 0.80, baseRotZ:  0.018 },
-      { pos: new THREE.Vector3(-0.9, 1.52, -3.93), scale: 0.82, baseRotZ:  0.020 },
-      { pos: new THREE.Vector3( 0.9, 1.58, -3.93), scale: 0.77, baseRotZ: -0.015 },
-    ],
+    cameraPos:    new THREE.Vector3(0, 1.6, 3.0),
+    cameraLookAt: new THREE.Vector3(0, 2.0, -4.5),
+    fov: 72,
   },
 };
 
@@ -38,13 +53,6 @@ export function getLayoutConfig(name) {
   return LAYOUTS[name];
 }
 
-const FRAME_DEFS = [
-  { id: 'about',    sectionId: 'about',    label: 'ABOUT' },
-  { id: 'projects', sectionId: 'projects', label: 'PROJECTS' },
-  { id: 'skills',   sectionId: 'skills',   label: 'SKILLS' },
-  { id: 'contact',  sectionId: 'contact',  label: 'CONTACT' },
-];
-
 export class Gallery {
   constructor(scene) {
     this.frames        = [];
@@ -54,27 +62,26 @@ export class Gallery {
     const group = new THREE.Group();
     scene.add(group);
 
-    FRAME_DEFS.forEach((def, i) => {
-      const { pos, scale, baseRotZ } = LAYOUTS.wide.frames[i];
-      const frame = new Frame({ ...def, position: pos, size: BASE_SIZE, baseRotZ });
-      frame.group.scale.setScalar(scale);
+    FRAME_CONFIGS.forEach(cfg => {
+      const frame = new Frame({
+        id:        cfg.id,
+        sectionId: cfg.sectionId,
+        label:     cfg.label,
+        position:  cfg.pos,
+        size:      BASE_SIZE,
+        baseRotY:  cfg.baseRotY,
+        baseRotZ:  cfg.baseRotZ,
+      });
+      frame.group.scale.setScalar(cfg.scale);
       group.add(frame.group);
       this.frames.push(frame);
       this.pictureMeshes.push(frame.pictureMesh);
     });
   }
 
-  setLayout(layoutName, instant = false) {
-    const layout = LAYOUTS[layoutName];
-    this.frames.forEach((frame, i) => {
-      const { pos, scale } = layout.frames[i];
-      if (instant) {
-        frame.teleport(pos, scale);
-      } else {
-        frame.setLayoutTarget(pos, scale);
-      }
-    });
-    return layout;
+  // Frame positions are fixed — layout only affects camera settings
+  setLayout(layoutName) {
+    return LAYOUTS[layoutName];
   }
 
   update(dt, camera, canvas) {
