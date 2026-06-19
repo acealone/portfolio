@@ -4,7 +4,7 @@ import { setupLighting }                          from './scene/Lighting.js';
 import { Gallery, getLayoutName, getLayoutConfig } from './scene/Gallery.js';
 import { initRaycaster }                          from './interactions/Raycaster.js';
 import { CameraFlight }                           from './interactions/CameraFlight.js';
-import { makeSpring, stepSpring }                 from './interactions/SpringPhysics.js';
+import { CameraRotate }                           from './interactions/CameraRotate.js';
 import { Gyroscope }                              from './interactions/Gyroscope.js';
 import { SubpageManager }                         from './subpages/SubpageManager.js';
 import { initAboutPage }                          from './subpages/AboutPage.js';
@@ -70,16 +70,17 @@ const initCfg = getLayoutConfig(currentLayout);
 const flight  = new CameraFlight(camera, fadeOverlay);
 flight.setHome(initCfg.cameraPos, initCfg.cameraLookAt);
 
-// ─── Gyroscope + camera parallax springs ────────────────────────────────────
+// ─── Camera rotation (gyro + touch drag) ────────────────────────────────────
 
-const gyro    = new Gyroscope();
-const camParX = makeSpring(); // left/right parallax
-const camParY = makeSpring(); // up/down parallax
+const camRotate = new CameraRotate();
+const gyro      = new Gyroscope();
 
 const gyroBtn  = document.getElementById('gyro-btn');
 const isMobile = ('ontouchstart' in window) || /Mobi|Android/i.test(navigator.userAgent);
 
 if (isMobile) {
+  camRotate.initTouchDrag(renderer.domElement);
+
   if (
     typeof DeviceOrientationEvent !== 'undefined' &&
     typeof DeviceOrientationEvent.requestPermission === 'function'
@@ -91,7 +92,7 @@ if (isMobile) {
       if (ok) gyroBtn.style.display = 'none';
     });
   } else {
-    // Android / non-gated: enable automatically
+    // Android / non-gated: auto-enable
     gyro.enable();
   }
 }
@@ -163,10 +164,9 @@ window.addEventListener('resize', () => {
     flight.setHome(cfg.cameraPos, cfg.cameraLookAt);
 
     if (!flight.active && !subpages.isOpen()) {
-      camera.position.copy(cfg.cameraPos);
       camera.fov = cfg.fov;
       camera.updateProjectionMatrix();
-      camera.lookAt(cfg.cameraLookAt);
+      camRotate.applyToCamera(camera, cfg.cameraPos, cfg.cameraLookAt);
     }
   }
 });
@@ -179,26 +179,11 @@ function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(clock.getDelta(), 0.05);
 
-  // Gyro: drive frame wobble + camera parallax when not in a flight/panel
+  // Rotate camera from gyro + drag when idle (not in a flight or panel)
   if (!flight.active && !subpages.isOpen()) {
-    if (gyro.active) {
-      // All frames tilt together — feels like the whole wall wobbles
-      gallery.setGyroTilt(-gyro.tiltX * 0.12, gyro.tiltY * 0.18);
-
-      // Soft camera parallax following gyro lean
-      stepSpring(camParX,  gyro.tiltY * 0.35, dt, 80, 14);
-      stepSpring(camParY, -gyro.tiltX * 0.20, dt, 80, 14);
-
-      const cfg = getLayoutConfig(currentLayout);
-      camera.position.x = cfg.cameraPos.x + camParX.pos;
-      camera.position.y = cfg.cameraPos.y + camParY.pos;
-      camera.lookAt(cfg.cameraLookAt);
-    } else {
-      // Ease parallax back to zero when gyro inactive / not mobile
-      stepSpring(camParX, 0, dt, 80, 14);
-      stepSpring(camParY, 0, dt, 80, 14);
-      gallery.setGyroTilt(0, 0);
-    }
+    const cfg = getLayoutConfig(currentLayout);
+    camRotate.update(dt, gyro.active ? gyro.tiltX : 0, gyro.active ? gyro.tiltY : 0);
+    camRotate.applyToCamera(camera, cfg.cameraPos, cfg.cameraLookAt);
   }
 
   if (!subpages.isOpen()) {

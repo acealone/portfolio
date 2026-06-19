@@ -30,10 +30,6 @@ export class Frame {
     this.isHovered = false;
     this._hoverStrength = 0; // 0–1 ramp so entry is smooth
 
-    // Gyro-driven tilt applied additively on top of hover spring
-    this._gyroX = 0;
-    this._gyroY = 0;
-
     this._posTarget   = position.clone();
     this._scaleTarget = 1.0;
 
@@ -141,11 +137,6 @@ export class Frame {
     this._scaleTarget = scale;
   }
 
-  setGyroTilt(gyroX, gyroY) {
-    this._gyroX = gyroX;
-    this._gyroY = gyroY;
-  }
-
   update(dt) {
     // Ramp hover strength for smooth wobble entry/exit
     if (this.isHovered) {
@@ -160,9 +151,8 @@ export class Frame {
     stepSpring(this.springX, sx, dt, SPRING_STIFFNESS, SPRING_DAMPING);
     stepSpring(this.springY, sy, dt, SPRING_STIFFNESS, SPRING_DAMPING);
 
-    // Hover spring + gyro tilt (additive, independent)
-    this.group.rotation.x = this.springX.pos + this._gyroX;
-    this.group.rotation.y = this.springY.pos + this._gyroY;
+    this.group.rotation.x = this.springX.pos;
+    this.group.rotation.y = this.springY.pos;
 
     const lf = Math.min(dt * 6, 1);
     this.group.position.lerp(this._posTarget, lf);
