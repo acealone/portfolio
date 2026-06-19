@@ -30,7 +30,7 @@ canvas.hovering {
   left: 50%;
   transform: translateX(-50%);
   font-family: 'Press Start 2P', monospace;
-  font-size: 0.55rem;
+  font-size: 0.7rem;
   color: #d4a017;
   letter-spacing: 2px;
   text-shadow: 2px 2px 0 #7a5c00;
@@ -66,7 +66,7 @@ canvas.hovering {
   bottom: 64px;
   right: 20px;
   font-family: 'Press Start 2P', monospace;
-  font-size: 0.4rem;
+  font-size: 0.55rem;
   background: #0d0d1a;
   color: #d4a017;
   border: 2px solid #d4a017;
