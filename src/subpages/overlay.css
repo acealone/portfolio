@@ -94,6 +94,14 @@
   transition: transform 0.05s, box-shadow 0.05s, background 0.05s;
   white-space: nowrap;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pixel-btn svg {
+  fill: currentColor;
+  flex-shrink: 0;
 }
 
 .pixel-btn:hover {
@@ -114,6 +122,14 @@
   letter-spacing: 2px;
   margin: 32px 0 16px;
   text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-title svg {
+  fill: currentColor;
+  flex-shrink: 0;
 }
 
 /* ─── Body text ─── */

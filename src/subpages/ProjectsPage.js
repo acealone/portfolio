@@ -1,3 +1,5 @@
+import { ICON } from '../utils/Icons.js';
+
 const PROJECTS = [
   {
     title: 'RETRO GALLERY',
@@ -33,14 +35,14 @@ export function initProjectsPage(panel, onBack) {
       <div class="tag-row">
         ${p.tags.map(t => `<span class="tag">${t}</span>`).join('')}
       </div>
-      <a href="${p.link}" class="project-link" target="_blank" rel="noopener">VIEW PROJECT &#9654;</a>
+      <a href="${p.link}" class="project-link" target="_blank" rel="noopener">VIEW PROJECT ${ICON.ARROW_RIGHT}</a>
     </div>
   `).join('');
 
   panel.innerHTML = `
     <div class="panel-inner">
       <div class="panel-header">
-        <button class="pixel-btn back-btn" aria-label="Go back">&#9664; BACK</button>
+        <button class="pixel-btn back-btn" aria-label="Go back">${ICON.ARROW_LEFT} BACK</button>
         <h1 class="panel-title">PROJECTS</h1>
       </div>
 
