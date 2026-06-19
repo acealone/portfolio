@@ -77,22 +77,36 @@ const gyro      = new Gyroscope();
 const gyroBtn  = document.getElementById('gyro-btn');
 const isMobile = ('ontouchstart' in window) || /Mobi|Android/i.test(navigator.userAgent);
 
+const gyroLabel = document.getElementById('gyro-label');
+
+const updateGyroBtn = (active) => {
+  gyroBtn.style.display = 'flex';
+  gyroLabel.textContent = active ? 'GYRO OFF' : 'GYRO';
+  gyroBtn.setAttribute('aria-label', active ? 'Disable gyroscope controls' : 'Enable gyroscope controls');
+};
+
 if (isMobile) {
   camRotate.initTouchDrag(renderer.domElement);
+
+  gyroBtn.addEventListener('click', async () => {
+    if (gyro.active) {
+      gyro.disable();
+      updateGyroBtn(false);
+    } else {
+      const ok = await gyro.enable();
+      if (ok) updateGyroBtn(true);
+    }
+  });
 
   if (
     typeof DeviceOrientationEvent !== 'undefined' &&
     typeof DeviceOrientationEvent.requestPermission === 'function'
   ) {
-    // iOS 13+: requires explicit user gesture
-    gyroBtn.style.display = 'flex';
-    gyroBtn.addEventListener('click', async () => {
-      const ok = await gyro.enable();
-      if (ok) gyroBtn.style.display = 'none';
-    });
+    // iOS 13+: show enable button first; toggles to OFF after permission granted
+    updateGyroBtn(false);
   } else {
-    // Android / non-gated: auto-enable
-    gyro.enable();
+    // Android / non-gated: auto-enable and show disable button
+    gyro.enable().then(() => updateGyroBtn(true));
   }
 }
 
