@@ -1,0 +1,46 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0d0d1a;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+}
+
+canvas {
+  display: block;
+  width: 100vw !important;
+  height: 100vh !important;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  cursor: default;
+}
+
+canvas.hovering {
+  cursor: pointer;
+}
+
+#ui-hint {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.45rem;
+  color: #d4a017;
+  letter-spacing: 2px;
+  text-shadow: 2px 2px 0 #7a5c00;
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0.7;
+  animation: blink 2s step-end infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 0.7; }
+  50%       { opacity: 0.2; }
+}
