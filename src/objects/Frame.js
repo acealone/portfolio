@@ -7,8 +7,13 @@ const BORDER_W  = 0.13;
 const BORDER_D  = 0.07;
 const PIC_DEPTH = 0.005;
 
+const SPRING_STIFFNESS = 120;
+const SPRING_DAMPING   = 18;
+const HOVER_IN_TIME    = 0.35; // seconds to ramp wobble strength to 1
+const HOVER_OUT_TIME   = 0.25; // seconds to ramp wobble strength back to 0
+
 export class Frame {
-  constructor({ id, sectionId, label, position, size }) {
+  constructor({ id, sectionId, label, position, size, baseRotZ = 0 }) {
     this.id        = id;
     this.sectionId = sectionId;
     this.label     = label;
@@ -16,15 +21,19 @@ export class Frame {
 
     this.group = new THREE.Group();
     this.group.position.copy(position);
+    this.group.rotation.z = baseRotZ;
 
-    // Spring state for hover tilt
     this.springX = makeSpring();
     this.springY = makeSpring();
     this.targetX = 0;
     this.targetY = 0;
     this.isHovered = false;
+    this._hoverStrength = 0; // 0–1 ramp so entry is smooth
 
-    // Responsive layout targets
+    // Gyro-driven tilt applied additively on top of hover spring
+    this._gyroX = 0;
+    this._gyroY = 0;
+
     this._posTarget   = position.clone();
     this._scaleTarget = 1.0;
 
@@ -120,7 +129,6 @@ export class Frame {
     this.group.add(plate);
   }
 
-  // Instantly set position and scale (used for initial layout, no lerp)
   teleport(position, scale = 1.0) {
     this.group.position.copy(position);
     this._posTarget.copy(position);
@@ -128,20 +136,34 @@ export class Frame {
     this.group.scale.setScalar(scale);
   }
 
-  // Set a new target — frame smoothly moves there in update()
   setLayoutTarget(position, scale = 1.0) {
     this._posTarget.copy(position);
     this._scaleTarget = scale;
   }
 
-  update(dt) {
-    // Spring-physics tilt from hover
-    stepSpring(this.springX, this.targetX, dt, 180, 16);
-    stepSpring(this.springY, this.targetY, dt, 180, 16);
-    this.group.rotation.x = this.springX.pos;
-    this.group.rotation.y = this.springY.pos;
+  setGyroTilt(gyroX, gyroY) {
+    this._gyroX = gyroX;
+    this._gyroY = gyroY;
+  }
 
-    // Smooth position / scale lerp toward layout target
+  update(dt) {
+    // Ramp hover strength for smooth wobble entry/exit
+    if (this.isHovered) {
+      this._hoverStrength = Math.min(1, this._hoverStrength + dt / HOVER_IN_TIME);
+    } else {
+      this._hoverStrength = Math.max(0, this._hoverStrength - dt / HOVER_OUT_TIME);
+    }
+
+    // Scale hover targets by ramp so the first frames of hover ease in
+    const sx = this.targetX * this._hoverStrength;
+    const sy = this.targetY * this._hoverStrength;
+    stepSpring(this.springX, sx, dt, SPRING_STIFFNESS, SPRING_DAMPING);
+    stepSpring(this.springY, sy, dt, SPRING_STIFFNESS, SPRING_DAMPING);
+
+    // Hover spring + gyro tilt (additive, independent)
+    this.group.rotation.x = this.springX.pos + this._gyroX;
+    this.group.rotation.y = this.springY.pos + this._gyroY;
+
     const lf = Math.min(dt * 6, 1);
     this.group.position.lerp(this._posTarget, lf);
     const cs = this.group.scale.x;

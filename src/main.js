@@ -1,14 +1,16 @@
 import * as THREE from 'three';
-import { buildRoom }                          from './scene/Room.js';
-import { setupLighting }                      from './scene/Lighting.js';
+import { buildRoom }                              from './scene/Room.js';
+import { setupLighting }                          from './scene/Lighting.js';
 import { Gallery, getLayoutName, getLayoutConfig } from './scene/Gallery.js';
-import { initRaycaster }                      from './interactions/Raycaster.js';
-import { CameraFlight }                       from './interactions/CameraFlight.js';
-import { SubpageManager }                     from './subpages/SubpageManager.js';
-import { initAboutPage }                      from './subpages/AboutPage.js';
-import { initProjectsPage }                   from './subpages/ProjectsPage.js';
-import { initSkillsPage }                     from './subpages/SkillsPage.js';
-import { initContactPage }                    from './subpages/ContactPage.js';
+import { initRaycaster }                          from './interactions/Raycaster.js';
+import { CameraFlight }                           from './interactions/CameraFlight.js';
+import { makeSpring, stepSpring }                 from './interactions/SpringPhysics.js';
+import { Gyroscope }                              from './interactions/Gyroscope.js';
+import { SubpageManager }                         from './subpages/SubpageManager.js';
+import { initAboutPage }                          from './subpages/AboutPage.js';
+import { initProjectsPage }                       from './subpages/ProjectsPage.js';
+import { initSkillsPage }                         from './subpages/SkillsPage.js';
+import { initContactPage }                        from './subpages/ContactPage.js';
 import './style.css';
 
 // ─── Renderer ───────────────────────────────────────────────────────────────
@@ -30,7 +32,6 @@ const camera = new THREE.PerspectiveCamera(
   100
 );
 
-// Apply initial layout config before first render
 let currentLayout = getLayoutName(window.innerWidth);
 const applyLayoutToCamera = (layoutName) => {
   const cfg = getLayoutConfig(layoutName);
@@ -53,7 +54,7 @@ setupLighting(scene);
 // ─── Gallery ────────────────────────────────────────────────────────────────
 
 const gallery = new Gallery(scene);
-gallery.setLayout(currentLayout, true); // teleport to initial layout immediately
+gallery.setLayout(currentLayout, true);
 
 // ─── Raycaster ──────────────────────────────────────────────────────────────
 
@@ -69,19 +70,43 @@ const initCfg = getLayoutConfig(currentLayout);
 const flight  = new CameraFlight(camera, fadeOverlay);
 flight.setHome(initCfg.cameraPos, initCfg.cameraLookAt);
 
+// ─── Gyroscope + camera parallax springs ────────────────────────────────────
+
+const gyro    = new Gyroscope();
+const camParX = makeSpring(); // left/right parallax
+const camParY = makeSpring(); // up/down parallax
+
+const gyroBtn  = document.getElementById('gyro-btn');
+const isMobile = ('ontouchstart' in window) || /Mobi|Android/i.test(navigator.userAgent);
+
+if (isMobile) {
+  if (
+    typeof DeviceOrientationEvent !== 'undefined' &&
+    typeof DeviceOrientationEvent.requestPermission === 'function'
+  ) {
+    // iOS 13+: requires explicit user gesture
+    gyroBtn.style.display = 'flex';
+    gyroBtn.addEventListener('click', async () => {
+      const ok = await gyro.enable();
+      if (ok) gyroBtn.style.display = 'none';
+    });
+  } else {
+    // Android / non-gated: enable automatically
+    gyro.enable();
+  }
+}
+
 // ─── Sub-pages ──────────────────────────────────────────────────────────────
 
 const subpages = new SubpageManager();
 
 function makeBackHandler(sectionId) {
   return () => {
-    // Instantly show the black overlay (covers sub-page while it hides)
     fadeOverlay.style.transition = 'none';
     fadeOverlay.style.opacity    = '1';
 
     requestAnimationFrame(() => {
       subpages.hide(sectionId, () => {
-        // Panel is display:none. Fly back — CameraFlight fades overlay 1→0.
         flight.flyBack(() => {});
       });
     });
@@ -105,7 +130,7 @@ initContactPage(
   makeBackHandler('contact')
 );
 
-// ─── Click handler ──────────────────────────────────────────────────────────
+// ─── Click / tap handler ─────────────────────────────────────────────────────
 
 renderer.domElement.addEventListener('click', () => {
   if (flight.active || subpages.isOpen()) return;
@@ -113,9 +138,7 @@ renderer.domElement.addEventListener('click', () => {
   if (!hovered) return;
 
   flight.flyTo(hovered, () => {
-    // Overlay is fully black. Show the sub-page.
     subpages.show(hovered.sectionId);
-    // Then fade the overlay away to reveal it (CameraFlight is inactive now).
     requestAnimationFrame(() => {
       fadeOverlay.style.transition = 'opacity 0.5s ease';
       fadeOverlay.style.opacity    = '0';
@@ -134,12 +157,11 @@ window.addEventListener('resize', () => {
   const newLayout = getLayoutName(window.innerWidth);
   if (newLayout !== currentLayout) {
     currentLayout = newLayout;
-    gallery.setLayout(newLayout); // smooth lerp to new positions
+    gallery.setLayout(newLayout);
 
     const cfg = getLayoutConfig(newLayout);
     flight.setHome(cfg.cameraPos, cfg.cameraLookAt);
 
-    // Only move camera if no flight/panel is active
     if (!flight.active && !subpages.isOpen()) {
       camera.position.copy(cfg.cameraPos);
       camera.fov = cfg.fov;
@@ -156,6 +178,28 @@ const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(clock.getDelta(), 0.05);
+
+  // Gyro: drive frame wobble + camera parallax when not in a flight/panel
+  if (!flight.active && !subpages.isOpen()) {
+    if (gyro.active) {
+      // All frames tilt together — feels like the whole wall wobbles
+      gallery.setGyroTilt(-gyro.tiltX * 0.12, gyro.tiltY * 0.18);
+
+      // Soft camera parallax following gyro lean
+      stepSpring(camParX,  gyro.tiltY * 0.35, dt, 80, 14);
+      stepSpring(camParY, -gyro.tiltX * 0.20, dt, 80, 14);
+
+      const cfg = getLayoutConfig(currentLayout);
+      camera.position.x = cfg.cameraPos.x + camParX.pos;
+      camera.position.y = cfg.cameraPos.y + camParY.pos;
+      camera.lookAt(cfg.cameraLookAt);
+    } else {
+      // Ease parallax back to zero when gyro inactive / not mobile
+      stepSpring(camParX, 0, dt, 80, 14);
+      stepSpring(camParY, 0, dt, 80, 14);
+      gallery.setGyroTilt(0, 0);
+    }
+  }
 
   if (!subpages.isOpen()) {
     gallery.update(dt, camera, renderer.domElement);
