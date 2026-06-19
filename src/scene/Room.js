@@ -7,8 +7,8 @@ import {
 } from '../utils/TextureFactory.js';
 import { PALETTE } from '../utils/ColorPalette.js';
 
-const W = 10; // room width  (x: -5 to +5)
-const D = 10; // room depth  (z: -5 to +5)
+const W = 14; // room width  (x: -7 to +7)
+const D = 14; // room depth  (z: -7 to +7)
 const H =  5; // room height (y:  0 to  5)
 
 export function buildRoom(scene) {
