@@ -1,16 +1,10 @@
 import * as THREE from 'three';
-import { makeSpring, stepSpring } from '../interactions/SpringPhysics.js';
 import { makePictureTexture } from './PictureContent.js';
 import { PALETTE } from '../utils/ColorPalette.js';
 
 const BORDER_W  = 0.13;
 const BORDER_D  = 0.07;
 const PIC_DEPTH = 0.005;
-
-const SPRING_STIFFNESS = 120;
-const SPRING_DAMPING   = 18;
-const HOVER_IN_TIME    = 0.35;
-const HOVER_OUT_TIME   = 0.25;
 
 export class Frame {
   constructor({ id, sectionId, label, position, size, baseRotZ = 0, baseRotY = 0 }) {
@@ -31,13 +25,6 @@ export class Frame {
     this.group.position.copy(position);
     this.group.rotation.z = baseRotZ;
     this.group.rotation.y = baseRotY; // set here too so first frame is correct
-
-    this.springX = makeSpring();
-    this.springY = makeSpring();
-    this.targetX = 0;
-    this.targetY = 0;
-    this.isHovered = false;
-    this._hoverStrength = 0;
 
     this._posTarget   = position.clone();
     this._scaleTarget = 1.0;
@@ -147,35 +134,9 @@ export class Frame {
   }
 
   update(dt) {
-    if (this.isHovered) {
-      this._hoverStrength = Math.min(1, this._hoverStrength + dt / HOVER_IN_TIME);
-    } else {
-      this._hoverStrength = Math.max(0, this._hoverStrength - dt / HOVER_OUT_TIME);
-    }
-
-    const sx = this.targetX * this._hoverStrength;
-    const sy = this.targetY * this._hoverStrength;
-    stepSpring(this.springX, sx, dt, SPRING_STIFFNESS, SPRING_DAMPING);
-    stepSpring(this.springY, sy, dt, SPRING_STIFFNESS, SPRING_DAMPING);
-
-    this.group.rotation.x = this.springX.pos;
-    this.group.rotation.y = this._baseRotY + this.springY.pos; // spring wobble on top of wall orientation
-
     const lf = Math.min(dt * 6, 1);
     this.group.position.lerp(this._posTarget, lf);
     const cs = this.group.scale.x;
     this.group.scale.setScalar(cs + (this._scaleTarget - cs) * lf);
-  }
-
-  setHoverTarget(localHitX, localHitY) {
-    this.isHovered = true;
-    this.targetY =  localHitX * 0.22;
-    this.targetX = -localHitY * 0.14;
-  }
-
-  clearHover() {
-    this.isHovered = false;
-    this.targetX = 0;
-    this.targetY = 0;
   }
 }
