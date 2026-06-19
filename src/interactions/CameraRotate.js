@@ -37,23 +37,21 @@ export class CameraRotate {
 
       // Positive dx (drag right) → positive yaw → camera looks left (drag-world feel)
       // Positive dy (drag down)  → positive pitch → camera looks down
-      this._dragYaw   +=  dx / window.innerWidth  * 2.5; // unclamped for 360° rotation
+      this._dragYaw   +=  dx / window.innerWidth  * 0.8; // unclamped for 360° rotation
       this._dragPitch +=  dy / window.innerHeight * 0.5;
       this._dragPitch  = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, this._dragPitch));
     }, { passive: true });
   }
 
   // gyroTiltX = beta delta (forward/back tilt), gyroTiltY = gamma delta (left/right roll)
+  // Gyro drives rotation velocity (tilt = speed), enabling full 360° just like drag.
   update(dt, gyroTiltX = 0, gyroTiltY = 0) {
-    // gyroTiltY (roll left/right) → yaw: roll right → look right (positive)
-    // gyroTiltX (pitch forward/back) → pitch: tilt forward → look down (positive)
-    const targetYaw   = this._dragYaw   + gyroTiltY * 0.22;
-    const targetPitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH,
-      this._dragPitch + gyroTiltX * 0.12
-    ));
+    this._dragYaw   += gyroTiltY * 1.5 * dt;
+    this._dragPitch += gyroTiltX * 1.0 * dt;
+    this._dragPitch  = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, this._dragPitch));
 
-    stepSpring(this._yawSpring,   targetYaw,   dt, 80, 14);
-    stepSpring(this._pitchSpring, targetPitch, dt, 80, 14);
+    stepSpring(this._yawSpring,   this._dragYaw,   dt, 80, 14);
+    stepSpring(this._pitchSpring, this._dragPitch, dt, 80, 14);
 
     this.yawOffset   = this._yawSpring.pos;
     this.pitchOffset = this._pitchSpring.pos;
