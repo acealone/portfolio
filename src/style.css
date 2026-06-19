@@ -53,3 +53,27 @@ canvas.hovering {
   pointer-events: none;
   z-index: 9;
 }
+
+#gyro-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 20px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.4rem;
+  background: #0d0d1a;
+  color: #d4a017;
+  border: 2px solid #d4a017;
+  padding: 7px 10px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  box-shadow: 3px 3px 0 #7a5c00;
+  z-index: 6;
+  display: none;
+  align-items: center;
+  gap: 6px;
+}
+
+#gyro-btn:active {
+  transform: translate(3px, 3px);
+  box-shadow: none;
+}
