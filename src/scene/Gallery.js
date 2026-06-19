@@ -11,22 +11,22 @@ const BASE_SIZE = { width: 1.3, height: 1.7 };
 const FRAME_CONFIGS = [
   {
     id: 'about',    sectionId: 'about',    label: 'ABOUT',
-    pos: new THREE.Vector3(-2.0, 2.5, -4.93),
+    pos: new THREE.Vector3(-2.0, 2.5, -6.93),
     scale: 1.00, baseRotY: 0,              baseRotZ: -0.025,
   },
   {
     id: 'projects', sectionId: 'projects', label: 'PROJECTS',
-    pos: new THREE.Vector3( 2.2, 2.2, -4.93),
+    pos: new THREE.Vector3( 2.2, 2.2, -6.93),
     scale: 0.95, baseRotY: 0,              baseRotZ:  0.020,
   },
   {
     id: 'skills',   sectionId: 'skills',   label: 'SKILLS',
-    pos: new THREE.Vector3(-4.93, 2.45, -1.0),
+    pos: new THREE.Vector3(-6.93, 2.45, -1.0),
     scale: 1.00, baseRotY:  Math.PI / 2,  baseRotZ:  0.015,
   },
   {
     id: 'contact',  sectionId: 'contact',  label: 'CONTACT',
-    pos: new THREE.Vector3( 4.93, 2.3,  1.0),
+    pos: new THREE.Vector3( 6.93, 2.3,  1.0),
     scale: 0.98, baseRotY: -Math.PI / 2,  baseRotZ: -0.018,
   },
 ];
@@ -35,12 +35,12 @@ const FRAME_CONFIGS = [
 const LAYOUTS = {
   wide: {
     cameraPos:    new THREE.Vector3(0, 1.6, 0),
-    cameraLookAt: new THREE.Vector3(0, 2.0, -5),
+    cameraLookAt: new THREE.Vector3(0, 2.0, -7),
     fov: 60,
   },
   narrow: {
     cameraPos:    new THREE.Vector3(0, 1.6, 0),
-    cameraLookAt: new THREE.Vector3(0, 2.0, -5),
+    cameraLookAt: new THREE.Vector3(0, 2.0, -7),
     fov: 72,
   },
 };
