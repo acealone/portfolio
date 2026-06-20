@@ -87,9 +87,9 @@ function drawAbout(ctx) {
 
   // Label
   ctx.fillStyle = '#d4a017';
-  ctx.fillRect(8, H - 14, W - 16, 1);
+  ctx.fillRect(8, H - 26, W - 16, 1);
   ctx.fillStyle = '#f5e6c8';
-  drawPixelText(ctx, 'ABOUT', 14, H - 10, 4);
+  drawPixelText(ctx, 'ABOUT', 14, H - 24, 4);
 }
 
 // Pixel-art monitor for Projects
@@ -128,9 +128,9 @@ function drawProjects(ctx) {
 
   // Label
   ctx.fillStyle = '#00ff41';
-  ctx.fillRect(8, H - 14, W - 16, 1);
+  ctx.fillRect(8, H - 21, W - 16, 1);
   ctx.fillStyle = '#f5e6c8';
-  drawPixelText(ctx, 'PROJECTS', 4, H - 10, 3);
+  drawPixelText(ctx, 'PROJECTS', 4, H - 19, 3);
 }
 
 // Pixel-art bar chart for Skills
@@ -170,9 +170,9 @@ function drawSkills(ctx) {
 
   // Label
   ctx.fillStyle = '#d4a017';
-  ctx.fillRect(8, H - 14, W - 16, 1);
+  ctx.fillRect(8, H - 26, W - 16, 1);
   ctx.fillStyle = '#f5e6c8';
-  drawPixelText(ctx, 'SKILLS', 11, H - 10, 4);
+  drawPixelText(ctx, 'SKILLS', 11, H - 24, 4);
 }
 
 // Pixel-art envelope for Contact
@@ -218,13 +218,13 @@ function drawContact(ctx) {
 
   // Label
   ctx.fillStyle = '#d4a017';
-  ctx.fillRect(8, H - 14, W - 16, 1);
+  ctx.fillRect(8, H - 21, W - 16, 1);
   ctx.fillStyle = '#f5e6c8';
-  drawPixelText(ctx, 'CONTACT', 7, H - 10, 3);
+  drawPixelText(ctx, 'CONTACT', 7, H - 19, 3);
 }
 
 // Minimal pixel text renderer using 3x5 bitmap font subset
-const PIXEL_CHARS = {
+export const PIXEL_CHARS = {
   'A': [[0,1,0],[1,0,1],[1,1,1],[1,0,1],[1,0,1]],
   'B': [[1,1,0],[1,0,1],[1,1,0],[1,0,1],[1,1,0]],
   'C': [[0,1,1],[1,0,0],[1,0,0],[1,0,0],[0,1,1]],
@@ -235,6 +235,7 @@ const PIXEL_CHARS = {
   'J': [[1,1,1],[0,1,0],[0,1,0],[1,1,0],[0,1,0]],
   'K': [[1,0,1],[1,0,1],[1,1,0],[1,0,1],[1,0,1]],
   'L': [[1,0,0],[1,0,0],[1,0,0],[1,0,0],[1,1,1]],
+  'N': [[1,0,1],[1,1,1],[1,0,1],[1,0,1],[1,0,1]],
   'O': [[0,1,0],[1,0,1],[1,0,1],[1,0,1],[0,1,0]],
   'P': [[1,1,0],[1,0,1],[1,1,0],[1,0,0],[1,0,0]],
   'R': [[1,1,0],[1,0,1],[1,1,0],[1,0,1],[1,0,1]],
@@ -243,7 +244,7 @@ const PIXEL_CHARS = {
   'U': [[1,0,1],[1,0,1],[1,0,1],[1,0,1],[0,1,0]],
 };
 
-function drawPixelText(ctx, text, x, y, scale = 3) {
+export function drawPixelText(ctx, text, x, y, scale = 3) {
   let cx = x;
   for (const ch of text) {
     const bitmap = PIXEL_CHARS[ch];
